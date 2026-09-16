@@ -54,7 +54,7 @@ window.addEventListener("load", () => {
 
   // AR.js コンテキスト
   let arToolkitContext = new THREEx.ArToolkitContext({
-    cameraParametersUrl: "https://cdn.jsdelivr.net/npm/ar.js@3.4.2/data/data/camera_para.dat",
+    cameraParametersUrl: "https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/three.js/data/camera_para.dat",
     detectionMode: "image",
     imageSmoothingEnabled: true
   });
@@ -63,7 +63,7 @@ window.addEventListener("load", () => {
     camera.projectionMatrix.copy(arToolkitContext.getProjectionMatrix());
   });
 
-  // === マーカー登録 ===
+  // === マーカー登録（imageUrl を使うのが超重要） ===
   const markers = [
     { id: "zeiss", url: "./markers/zeiss-marker.png" },
     { id: "heartlung", url: "./markers/heartlung-marker.png" }
@@ -76,7 +76,7 @@ window.addEventListener("load", () => {
 
     new THREEx.ArMarkerControls(arToolkitContext, root, {
       type: "image",
-      patternUrl: m.url
+      imageUrl: m.url   // ← ここが最重要（patternUrl では絶対に動かない）
     });
   });
 
