@@ -5,9 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AR Multi Marker</title>
 
-  <!-- AR.js + Three.js -->
+  <!-- Three.js -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/ar.js@3.4.2/three.js/build/ar-threex.js"></script>
+
+  <!-- GLTFLoader -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/examples/js/loaders/GLTFLoader.js"></script>
+
+  <!-- AR.js 正しい読み込みパス -->
+  <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/three.js/build/ar-threex.js"></script>
 
   <style>
     body { margin: 0; overflow: hidden; }
@@ -29,6 +34,7 @@
 <body>
   <div id="ui">マーカーを映してください</div>
 
+  <!-- main.js の正しいパス -->
   <script src="./js/main.js"></script>
 </body>
 </html>
