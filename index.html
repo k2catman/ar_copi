@@ -5,12 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MindAR Canvas Mode AR</title>
 
-  <!-- MindAR -->
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image.prod.js"></script>
+  <!-- ES Module 版 MindAR -->
+  <script type="module">
+    import { MindARImageTracker } from "https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image.module.js";
+    window.MindARImageTracker = MindARImageTracker;
+  </script>
 
-  <!-- Three.js -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/loaders/GLTFLoader.js"></script>
+  <!-- Three.js ES Module -->
+  <script type="module">
+    import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js";
+    import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/loaders/GLTFLoader.js";
+
+    window.THREE = THREE;
+    window.GLTFLoader = GLTFLoader;
+  </script>
 
   <style>
     body { margin: 0; overflow: hidden; }
@@ -22,7 +30,7 @@
   <canvas id="cameraCanvas"></canvas>
   <canvas id="threeCanvas"></canvas>
 
-  <!-- 非モジュール版として読み込む -->
-  <script src="./main.js"></script>
+  <!-- main.js も ES Module として読み込む -->
+  <script type="module" src="./main.js"></script>
 </body>
 </html>
