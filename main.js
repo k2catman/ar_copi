@@ -2,9 +2,12 @@ window.addEventListener("DOMContentLoaded", async () => {
   const cameraCanvas = document.querySelector("#cameraCanvas");
   const threeCanvas = document.querySelector("#threeCanvas");
 
-  // MindAR 初期化（videoTexture を使わない Canvas モード）
+  // MindAR 初期化（非モジュール版）
   const mindar = new window.MindAR.ImageTracker({
-    imageTargetSrc: "./assets/pattern-zeiss-marker.png",
+    imageTargetSrc: [
+      "./assets/pattern-zeiss-marker.png",
+      "./assets/pattern-heartlung-marker.png"
+    ],
     maxTrack: 2,
   });
 
@@ -50,21 +53,13 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // マーカーごとのイベント
   mindar.on("targetFound", (targetIndex) => {
-    if (targetIndex === 0) {
-      zeissModel.visible = true;
-    }
-    if (targetIndex === 1) {
-      heartlungModel.visible = true;
-    }
+    if (targetIndex === 0) zeissModel.visible = true;
+    if (targetIndex === 1) heartlungModel.visible = true;
   });
 
   mindar.on("targetLost", (targetIndex) => {
-    if (targetIndex === 0) {
-      zeissModel.visible = false;
-    }
-    if (targetIndex === 1) {
-      heartlungModel.visible = false;
-    }
+    if (targetIndex === 0) zeissModel.visible = false;
+    if (targetIndex === 1) heartlungModel.visible = false;
   });
 
   // Three.js レンダリングループ
