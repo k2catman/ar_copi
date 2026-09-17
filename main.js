@@ -1,119 +1,56 @@
-// ===============================
-// AR.js + Three.js main.js
-// pattern-zeiss-marker.patt
-// pattern-heartlung-marker.patt
-// zeiss.glb / heartlung.glb
-// ===============================
+import { MindARImage } from "https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image.prod.js";
 
-let renderer, scene, camera;
-let arSource, arContext;
-let markerZeiss, markerHeartLung;
+window.addEventListener("DOMContentLoaded", async () => {
+  const cameraCanvas = document.querySelector("#cameraCanvas");
+  const threeCanvas = document.querySelector("#threeCanvas");
 
-init();
-animate();
+  // MindAR 初期化（videoTexture を使わない）
+  const mindar = new MindARImage({
+    container: document.body,
+    imageTargetSrc: "./assets/marker.png",
+    maxTrack: 1,
+  });
 
-function init() {
-    // レンダラー
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.outputEncoding = THREE.sRGBEncoding;
-    document.body.appendChild(renderer.domElement);
+  const { renderer, scene, camera } = await mindar.start({
+    canvas: threeCanvas,
+    imageTargetSrc: "./assets/marker.png",
+  });
 
-    // シーン & カメラ
-    scene = new THREE.Scene();
-    camera = new THREE.Camera();
-    scene.add(camera);
+  // カメラ映像を canvas に描画する
+  const video = mindar.video;
+  const ctx = cameraCanvas.getContext("2d");
 
-    // AR.js ソース（カメラ）
-    arSource = new THREEx.ArToolkitSource({
-        sourceType: 'webcam'
+  function drawCamera() {
+    ctx.drawImage(video, 0, 0, cameraCanvas.width, cameraCanvas.height);
+    requestAnimationFrame(drawCamera);
+  }
+
+  video.addEventListener("loadeddata", () => {
+    cameraCanvas.width = video.videoWidth;
+    cameraCanvas.height = video.videoHeight;
+    drawCamera();
+  });
+
+  // 3Dモデル読み込み
+  const loader = new THREE.GLTFLoader();
+  loader.load("./assets/model.glb", (gltf) => {
+    const model = gltf.scene;
+    model.scale.set(0.5, 0.5, 0.5);
+    model.visible = false;
+    scene.add(model);
+
+    mindar.on("targetFound", () => {
+      model.visible = true;
     });
 
-    arSource.init(() => onResize());
-    window.addEventListener('resize', () => onResize());
-
-    // AR.js コンテキスト
-    arContext = new THREEx.ArToolkitContext({
-        cameraParametersUrl: 'https://k2catman.github.io/ar_copi/data/camera_para.dat',
-        detectionMode: 'mono',
-        maxDetectionRate: 30,
-        canvasWidth: 640,
-        canvasHeight: 480
+    mindar.on("targetLost", () => {
+      model.visible = false;
     });
 
-    arContext.init(() => {
-        camera.projectionMatrix.copy(arContext.getProjectionMatrix());
-    });
-
-    // ===============================
-    // マーカー設定（絶対パスで安全に読み込む）
-    // ===============================
-
-    // 顕微鏡（Zeiss）
-    markerZeiss = new THREE.Group();
-    scene.add(markerZeiss);
-
-    new THREEx.ArMarkerControls(arContext, markerZeiss, {
-        type: 'pattern',
-        patternUrl: 'https://k2catman.github.io/ar_copi/markers/pattern-zeiss-marker.patt'
-    });
-
-    // 人工心肺
-    markerHeartLung = new THREE.Group();
-    scene.add(markerHeartLung);
-
-    new THREEx.ArMarkerControls(arContext, markerHeartLung, {
-        type: 'pattern',
-        patternUrl: 'https://k2catman.github.io/ar_copi/markers/pattern-heartlung-marker.patt'
-    });
-
-    // ===============================
-    // 3Dモデル読み込み
-    // ===============================
-
-    const loader = new THREE.GLTFLoader();
-
-    // 顕微鏡モデル（zeiss.glb）
-    loader.load(
-        'https://k2catman.github.io/ar_copi/models/zeiss.glb',
-        gltf => {
-            const model = gltf.scene;
-            model.scale.set(0.5, 0.5, 0.5);
-            model.position.set(0, 0, 0);
-            markerZeiss.add(model);
-        }
-    );
-
-    // 人工心肺モデル（heartlung.glb）
-    loader.load(
-        'https://k2catman.github.io/ar_copi/models/heartlung.glb',
-        gltf => {
-            const model = gltf.scene;
-            model.scale.set(0.5, 0.5, 0.5);
-            model.position.set(0, 0, 0);
-            markerHeartLung.add(model);
-        }
-    );
-
-    // ライト
-    const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1.0);
-    scene.add(light);
-}
-
-function onResize() {
-    arSource.onResizeElement();
-    arSource.copyElementSizeTo(renderer.domElement);
-    if (arContext.arController !== null) {
-        arSource.copyElementSizeTo(arContext.arController.canvas);
+    function render() {
+      renderer.render(scene, camera);
+      requestAnimationFrame(render);
     }
-}
-
-function animate() {
-    requestAnimationFrame(animate);
-
-    if (!arSource.ready) return;
-
-    arContext.update(arSource.domElement);
-    renderer.render(scene, camera);
-}
+    render();
+  });
+});
