@@ -1,71 +1,77 @@
-window.addEventListener("DOMContentLoaded", async () => {
-  const cameraCanvas = document.querySelector("#cameraCanvas");
-  const threeCanvas = document.querySelector("#threeCanvas");
+window.addEventListener("DOMContentLoaded", () => {
+  const canvas = document.querySelector("#canvas");
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
 
-  // MindAR 初期化（UMD版）
-  const mindar = new window.MindAR.ImageTracker({
-    imageTargetSrc: [
-      "./assets/pattern-zeiss-marker.png",
-      "./assets/pattern-heartlung-marker.png"
-    ],
-    maxTrack: 2,
-  });
+  const scene = new THREE.Scene();
+  const camera = new THREE.Camera();
+  scene.add(camera);
 
-  const { renderer, scene, camera } = await mindar.start({
-    canvas: threeCanvas,
-  });
+  // カメラ映像
+  const video = document.createElement("video");
+  video.setAttribute("autoplay", "");
+  video.setAttribute("muted", "");
+  video.setAttribute("playsinline", "");
 
-  // カメラ映像を canvas に描画
-  const video = mindar.video;
-  const ctx = cameraCanvas.getContext("2d");
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+    .then((stream) => {
+      video.srcObject = stream;
+    });
 
-  function drawCamera() {
-    ctx.drawImage(video, 0, 0, cameraCanvas.width, cameraCanvas.height);
-    requestAnimationFrame(drawCamera);
-  }
+  // ARToolkit 初期化
+  const arController = new ARController(canvas, 640, 480, "./assets/camera_para.dat");
 
-  video.addEventListener("loadeddata", () => {
-    cameraCanvas.width = video.videoWidth;
-    cameraCanvas.height = video.videoHeight;
-    drawCamera();
-  });
+  arController.onload = () => {
+    arController.addPatternMarker("./assets/pattern-zeiss-marker.patt", (markerId) => {
+      console.log("Zeiss marker loaded:", markerId);
+    });
 
-  // GLTF Loader
-  const loader = new THREE.GLTFLoader();
+    arController.addPatternMarker("./assets/pattern-heartlung-marker.patt", (markerId) => {
+      console.log("Heartlung marker loaded:", markerId);
+    });
 
-  // 顕微鏡モデル
-  let zeissModel;
-  loader.load("./assets/zeiss.glb", (gltf) => {
-    zeissModel = gltf.scene;
-    zeissModel.scale.set(0.5, 0.5, 0.5);
-    zeissModel.visible = false;
-    scene.add(zeissModel);
-  });
+    // モデル読み込み
+    const loader = new THREE.GLTFLoader();
 
-  // 人工心肺モデル
-  let heartlungModel;
-  loader.load("./assets/heartlung.glb", (gltf) => {
-    heartlungModel = gltf.scene;
-    heartlungModel.scale.set(0.5, 0.5, 0.5);
-    heartlungModel.visible = false;
-    scene.add(heartlungModel);
-  });
+    let zeissModel, heartlungModel;
 
-  // マーカーイベント
-  mindar.on("targetFound", (index) => {
-    if (index === 0) zeissModel.visible = true;
-    if (index === 1) heartlungModel.visible = true;
-  });
+    loader.load("./assets/zeiss.glb", (gltf) => {
+      zeissModel = gltf.scene;
+      zeissModel.scale.set(0.5, 0.5, 0.5);
+      zeissModel.visible = false;
+      scene.add(zeissModel);
+    });
 
-  mindar.on("targetLost", (index) => {
-    if (index === 0) zeissModel.visible = false;
-    if (index === 1) heartlungModel.visible = false;
-  });
+    loader.load("./assets/heartlung.glb", (gltf) => {
+      heartlungModel = gltf.scene;
+      heartlungModel.scale.set(0.5, 0.5, 0.5);
+      heartlungModel.visible = false;
+      scene.add(heartlungModel);
+    });
 
-  // Three.js レンダリング
-  function render() {
-    renderer.render(scene, camera);
-    requestAnimationFrame(render);
-  }
-  render();
+    // レンダリングループ
+    function render() {
+      if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        arController.process(video);
+
+        const markers = arController.getMarkerNum();
+        for (let i = 0; i < markers; i++) {
+          const marker = arController.getMarker(i);
+
+          if (marker.idPatt === 0 && zeissModel) {
+            zeissModel.visible = true;
+            zeissModel.matrix.fromArray(marker.matrix);
+          } else if (marker.idPatt === 1 && heartlungModel) {
+            heartlungModel.visible = true;
+            heartlungModel.matrix.fromArray(marker.matrix);
+          }
+        }
+      }
+
+      renderer.render(scene, camera);
+      requestAnimationFrame(render);
+    }
+
+    render();
+  };
 });
