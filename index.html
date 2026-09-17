@@ -1,29 +1,26 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MindAR Canvas Mode AR</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebAR (jsartoolkit5 + Three.js)</title>
 
-  <!-- MindAR UMD版 -->
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image.prod.js"></script>
-
-  <!-- Three.js UMD版 -->
+  <!-- Three.js -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
-
-  <!-- GLTFLoader UMD版 -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/loaders/GLTFLoader.js"></script>
+
+  <!-- jsartoolkit5 (AR.js のコア部分) -->
+  <script src="https://cdn.jsdelivr.net/gh/artoolkitx/jsartoolkit5/build/artoolkit.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/artoolkitx/jsartoolkit5/build/artoolkit.api.js"></script>
 
   <style>
     body { margin: 0; overflow: hidden; }
-    canvas { position: fixed; top: 0; left: 0; }
+    video { display: none; }
   </style>
 </head>
 
 <body>
-  <canvas id="cameraCanvas"></canvas>
-  <canvas id="threeCanvas"></canvas>
-
+  <canvas id="canvas"></canvas>
   <script src="./main.js"></script>
 </body>
 </html>
