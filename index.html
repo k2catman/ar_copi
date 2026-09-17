@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MindAR Canvas Mode AR</title>
 
-  <!-- ES Module 版 MindAR -->
+  <!-- MindAR ES Module -->
   <script type="module">
-    import { MindARImageTracker } from "https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image.module.js";
+    import { MindARImageTracker } from "https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image.es.js";
     window.MindARImageTracker = MindARImageTracker;
   </script>
 
@@ -30,7 +30,6 @@
   <canvas id="cameraCanvas"></canvas>
   <canvas id="threeCanvas"></canvas>
 
-  <!-- main.js も ES Module として読み込む -->
   <script type="module" src="./main.js"></script>
 </body>
 </html>
