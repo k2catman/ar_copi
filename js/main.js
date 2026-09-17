@@ -56,7 +56,7 @@ function init() {
 
     new THREEx.ArMarkerControls(arContext, markerZeiss, {
         type: 'pattern',
-        patternUrl: 'markers/pattern-zeiss-marker.patt'
+        patternUrl: './markers/pattern-zeiss-marker.patt'
     });
 
     // 人工心肺
@@ -65,7 +65,7 @@ function init() {
 
     new THREEx.ArMarkerControls(arContext, markerHeartLung, {
         type: 'pattern',
-        patternUrl: 'markers/pattern-heartlung-marker.patt'
+        patternUrl: './markers/pattern-heartlung-marker.patt'
     });
 
     // ===============================
