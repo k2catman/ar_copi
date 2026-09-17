@@ -16,62 +16,61 @@ window.addEventListener("DOMContentLoaded", () => {
   navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
     .then((stream) => {
       video.srcObject = stream;
+
+      // ★★★ ここが重要 ★★★
+      video.onloadeddata = () => {
+        startAR(video);
+      };
     });
 
-  // ARToolkit 初期化
-  const arController = new ARController(canvas, 640, 480, "./assets/camera_para.dat");
+  function startAR(video) {
+    const arController = new ARController(canvas, video.videoWidth, video.videoHeight, "./assets/camera_para.dat");
 
-  arController.onload = () => {
-    arController.addPatternMarker("./assets/pattern-zeiss-marker.patt", (markerId) => {
-      console.log("Zeiss marker loaded:", markerId);
-    });
+    arController.onload = () => {
+      arController.addPatternMarker("./assets/pattern-zeiss-marker.patt", 0);
+      arController.addPatternMarker("./assets/pattern-heartlung-marker.patt", 1);
 
-    arController.addPatternMarker("./assets/pattern-heartlung-marker.patt", (markerId) => {
-      console.log("Heartlung marker loaded:", markerId);
-    });
+      const loader = new THREE.GLTFLoader();
 
-    // モデル読み込み
-    const loader = new THREE.GLTFLoader();
+      let zeissModel, heartlungModel;
 
-    let zeissModel, heartlungModel;
+      loader.load("./assets/zeiss.glb", (gltf) => {
+        zeissModel = gltf.scene;
+        zeissModel.scale.set(0.5, 0.5, 0.5);
+        zeissModel.visible = false;
+        scene.add(zeissModel);
+      });
 
-    loader.load("./assets/zeiss.glb", (gltf) => {
-      zeissModel = gltf.scene;
-      zeissModel.scale.set(0.5, 0.5, 0.5);
-      zeissModel.visible = false;
-      scene.add(zeissModel);
-    });
+      loader.load("./assets/heartlung.glb", (gltf) => {
+        heartlungModel = gltf.scene;
+        heartlungModel.scale.set(0.5, 0.5, 0.5);
+        heartlungModel.visible = false;
+        scene.add(heartlungModel);
+      });
 
-    loader.load("./assets/heartlung.glb", (gltf) => {
-      heartlungModel = gltf.scene;
-      heartlungModel.scale.set(0.5, 0.5, 0.5);
-      heartlungModel.visible = false;
-      scene.add(heartlungModel);
-    });
+      function render() {
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+          arController.process(video);
 
-    // レンダリングループ
-    function render() {
-      if (video.readyState === video.HAVE_ENOUGH_DATA) {
-        arController.process(video);
+          const markers = arController.getMarkerNum();
+          for (let i = 0; i < markers; i++) {
+            const marker = arController.getMarker(i);
 
-        const markers = arController.getMarkerNum();
-        for (let i = 0; i < markers; i++) {
-          const marker = arController.getMarker(i);
-
-          if (marker.idPatt === 0 && zeissModel) {
-            zeissModel.visible = true;
-            zeissModel.matrix.fromArray(marker.matrix);
-          } else if (marker.idPatt === 1 && heartlungModel) {
-            heartlungModel.visible = true;
-            heartlungModel.matrix.fromArray(marker.matrix);
+            if (marker.idPatt === 0 && zeissModel) {
+              zeissModel.visible = true;
+              zeissModel.matrix.fromArray(marker.matrix);
+            } else if (marker.idPatt === 1 && heartlungModel) {
+              heartlungModel.visible = true;
+              heartlungModel.matrix.fromArray(marker.matrix);
+            }
           }
         }
+
+        renderer.render(scene, camera);
+        requestAnimationFrame(render);
       }
 
-      renderer.render(scene, camera);
-      requestAnimationFrame(render);
-    }
-
-    render();
-  };
+      render();
+    };
+  }
 });
