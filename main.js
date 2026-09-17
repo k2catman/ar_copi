@@ -1,19 +1,15 @@
-import { MindARImage } from "https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image.prod.js";
-
 window.addEventListener("DOMContentLoaded", async () => {
   const cameraCanvas = document.querySelector("#cameraCanvas");
   const threeCanvas = document.querySelector("#threeCanvas");
 
-  // MindAR 初期化（videoTexture を使わない）
-  const mindar = new MindARImage({
-    container: document.body,
-    imageTargetSrc: "./assets/marker.png",
-    maxTrack: 1,
+  // MindAR 初期化（videoTexture を使わない Canvas モード）
+  const mindar = new window.MindAR.ImageTracker({
+    imageTargetSrc: "./assets/pattern-zeiss-marker.png",
+    maxTrack: 2,
   });
 
   const { renderer, scene, camera } = await mindar.start({
     canvas: threeCanvas,
-    imageTargetSrc: "./assets/marker.png",
   });
 
   // カメラ映像を canvas に描画する
@@ -31,26 +27,50 @@ window.addEventListener("DOMContentLoaded", async () => {
     drawCamera();
   });
 
-  // 3Dモデル読み込み
+  // GLTF Loader
   const loader = new THREE.GLTFLoader();
-  loader.load("./assets/model.glb", (gltf) => {
-    const model = gltf.scene;
-    model.scale.set(0.5, 0.5, 0.5);
-    model.visible = false;
-    scene.add(model);
 
-    mindar.on("targetFound", () => {
-      model.visible = true;
-    });
-
-    mindar.on("targetLost", () => {
-      model.visible = false;
-    });
-
-    function render() {
-      renderer.render(scene, camera);
-      requestAnimationFrame(render);
-    }
-    render();
+  // モデル読み込み（顕微鏡）
+  let zeissModel;
+  loader.load("./assets/zeiss.glb", (gltf) => {
+    zeissModel = gltf.scene;
+    zeissModel.scale.set(0.5, 0.5, 0.5);
+    zeissModel.visible = false;
+    scene.add(zeissModel);
   });
+
+  // モデル読み込み（人工心肺）
+  let heartlungModel;
+  loader.load("./assets/heartlung.glb", (gltf) => {
+    heartlungModel = gltf.scene;
+    heartlungModel.scale.set(0.5, 0.5, 0.5);
+    heartlungModel.visible = false;
+    scene.add(heartlungModel);
+  });
+
+  // マーカーごとのイベント
+  mindar.on("targetFound", (targetIndex) => {
+    if (targetIndex === 0) {
+      zeissModel.visible = true;
+    }
+    if (targetIndex === 1) {
+      heartlungModel.visible = true;
+    }
+  });
+
+  mindar.on("targetLost", (targetIndex) => {
+    if (targetIndex === 0) {
+      zeissModel.visible = false;
+    }
+    if (targetIndex === 1) {
+      heartlungModel.visible = false;
+    }
+  });
+
+  // Three.js レンダリングループ
+  function render() {
+    renderer.render(scene, camera);
+    requestAnimationFrame(render);
+  }
+  render();
 });
