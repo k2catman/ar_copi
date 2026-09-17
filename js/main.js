@@ -1,110 +1,122 @@
-// === 基本セットアップ ===
-let scene, camera, renderer;
-let clock = new THREE.Clock();
+// ===============================
+// AR.js + Three.js main.js
+// microscope.patt / heartlung.patt の2マーカー対応
+// ===============================
 
-// モデル格納用
-let models = {
-  zeiss: null,
-  heartlung: null
-};
+let renderer, scene, camera;
+let arSource, arContext;
+let markerMicroscope, markerHeartLung;
 
-// マーカーごとの Root（3Dの親）
-let markerRoots = {};
+init();
+animate();
 
-// === 初期化 ===
-window.addEventListener("load", () => {
-  // Three.js シーン
-  scene = new THREE.Scene();
+function init() {
+    // レンダラー
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    document.body.appendChild(renderer.domElement);
 
-  // カメラ
-  camera = new THREE.Camera();
-  scene.add(camera);
+    // シーン & カメラ
+    scene = new THREE.Scene();
+    camera = new THREE.Camera();
+    scene.add(camera);
 
-  // レンダラー
-  renderer = new THREE.WebGLRenderer({
-    antialias: true,
-    alpha: true
-  });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(window.devicePixelRatio);
-  document.body.appendChild(renderer.domElement);
-
-  // AR.js 初期化
-  let arToolkitSource = new THREEx.ArToolkitSource({
-    sourceType: "webcam"
-  });
-
-  arToolkitSource.init(() => {
-    setTimeout(() => {
-      onResize();
-    }, 2000);
-  });
-
-  window.addEventListener("resize", () => {
-    onResize();
-  });
-
-  function onResize() {
-    arToolkitSource.onResizeElement();
-    arToolkitSource.copyElementSizeTo(renderer.domElement);
-    if (arToolkitContext.arController !== null) {
-      arToolkitSource.copyElementSizeTo(arToolkitContext.arController.canvas);
-    }
-  }
-
-  // AR.js コンテキスト
-  let arToolkitContext = new THREEx.ArToolkitContext({
-    cameraParametersUrl: "https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/three.js/data/camera_para.dat",
-    detectionMode: "image",
-    imageSmoothingEnabled: true
-  });
-
-  arToolkitContext.init(() => {
-    camera.projectionMatrix.copy(arToolkitContext.getProjectionMatrix());
-  });
-
-  // === マーカー登録（imageUrl を使うのが超重要） ===
-  const markers = [
-    { id: "zeiss", url: "./markers/zeiss-marker.png" },
-    { id: "heartlung", url: "./markers/heartlung-marker.png" }
-  ];
-
-  markers.forEach(m => {
-    let root = new THREE.Group();
-    scene.add(root);
-    markerRoots[m.id] = root;
-
-    new THREEx.ArMarkerControls(arToolkitContext, root, {
-      type: "image",
-      imageUrl: m.url   // ← ここが最重要（patternUrl では絶対に動かない）
+    // AR.js ソース（カメラ）
+    arSource = new THREEx.ArToolkitSource({
+        sourceType: 'webcam'
     });
-  });
 
-  // === モデル読み込み ===
-  const loader = new THREE.GLTFLoader();
+    arSource.init(function onReady() {
+        onResize();
+    });
 
-  loader.load("./models/zeiss.glb", gltf => {
-    models.zeiss = gltf.scene;
-    models.zeiss.scale.set(0.5, 0.5, 0.5); // サイズ固定
-    markerRoots.zeiss.add(models.zeiss);
-  });
+    window.addEventListener('resize', function () {
+        onResize();
+    });
 
-  loader.load("./models/heartlung.glb", gltf => {
-    models.heartlung = gltf.scene;
-    models.heartlung.scale.set(0.5, 0.5, 0.5); // サイズ固定
-    markerRoots.heartlung.add(models.heartlung);
-  });
+    // AR.js コンテキスト
+    arContext = new THREEx.ArToolkitContext({
+        cameraParametersUrl: 'data/camera_para.dat',
+        detectionMode: 'mono',
+        maxDetectionRate: 30,
+        canvasWidth: 640,
+        canvasHeight: 480
+    });
 
-  // === 描画ループ ===
-  function animate() {
+    arContext.init(function onCompleted() {
+        camera.projectionMatrix.copy(arContext.getProjectionMatrix());
+    });
+
+    // ===============================
+    // マーカー設定
+    // ===============================
+
+    // 顕微鏡用マーカー
+    markerMicroscope = new THREE.Group();
+    scene.add(markerMicroscope);
+
+    let markerControlsMicroscope = new THREEx.ArMarkerControls(arContext, markerMicroscope, {
+        type: 'pattern',
+        patternUrl: 'markers/microscope.patt'
+    });
+
+    // 人工心肺用マーカー
+    markerHeartLung = new THREE.Group();
+    scene.add(markerHeartLung);
+
+    let markerControlsHeartLung = new THREEx.ArMarkerControls(arContext, markerHeartLung, {
+        type: 'pattern',
+        patternUrl: 'markers/heartlung.patt'
+    });
+
+    // ===============================
+    // 3Dモデル読み込み
+    // ===============================
+
+    const loader = new THREE.GLTFLoader();
+
+    // 顕微鏡モデル
+    loader.load(
+        'models/microscope.glb',
+        function (gltf) {
+            let model = gltf.scene;
+            model.scale.set(0.5, 0.5, 0.5);   // 適宜調整
+            model.position.set(0, 0, 0);
+            markerMicroscope.add(model);
+        }
+    );
+
+    // 人工心肺モデル
+    loader.load(
+        'models/heartlung.glb',
+        function (gltf) {
+            let model = gltf.scene;
+            model.scale.set(0.5, 0.5, 0.5);   // 適宜調整
+            model.position.set(0, 0, 0);
+            markerHeartLung.add(model);
+        }
+    );
+
+    // 簡易ライト
+    const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1.0);
+    scene.add(light);
+}
+
+function onResize() {
+    arSource.onResizeElement();
+    arSource.copyElementSizeTo(renderer.domElement);
+    if (arContext.arController !== null) {
+        arSource.copyElementSizeTo(arContext.arController.canvas);
+    }
+}
+
+function animate() {
     requestAnimationFrame(animate);
 
-    if (arToolkitSource.ready) {
-      arToolkitContext.update(arToolkitSource.domElement);
-    }
+    if (!arSource.ready) return;
 
+    arContext.update(arSource.domElement);
     renderer.render(scene, camera);
-  }
-
-  animate();
-});
+}
