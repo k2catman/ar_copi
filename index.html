@@ -1,25 +1,26 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <title>AR COPI</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MindAR Canvas Mode AR</title>
 
-    <!-- AR.js -->
-    <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/three.js/build/ar-threex.js"></script>
+  <!-- MindAR -->
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image.prod.js"></script>
 
-    <!-- Three.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- Three.js -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
 
-    <!-- GLTF Loader -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/loaders/GLTFLoader.js"></script>
-
-    <style>
-        body { margin: 0; overflow: hidden; }
-        video { display: none; }
-    </style>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    canvas { position: fixed; top: 0; left: 0; }
+  </style>
 </head>
 
 <body>
-    <script src="./main.js"></script>
+  <canvas id="cameraCanvas"></canvas>
+  <canvas id="threeCanvas"></canvas>
+
+  <script src="./main.js"></script>
 </body>
 </html>
