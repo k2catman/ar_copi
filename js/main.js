@@ -1,11 +1,13 @@
 // ===============================
 // AR.js + Three.js main.js
-// microscope.patt / heartlung.patt の2マーカー対応
+// pattern-zeiss-marker.patt
+// pattern-heartlung-marker.patt
+// zeiss.glb / heartlung.glb
 // ===============================
 
 let renderer, scene, camera;
 let arSource, arContext;
-let markerMicroscope, markerHeartLung;
+let markerZeiss, markerHeartLung;
 
 init();
 animate();
@@ -28,13 +30,8 @@ function init() {
         sourceType: 'webcam'
     });
 
-    arSource.init(function onReady() {
-        onResize();
-    });
-
-    window.addEventListener('resize', function () {
-        onResize();
-    });
+    arSource.init(() => onResize());
+    window.addEventListener('resize', () => onResize());
 
     // AR.js コンテキスト
     arContext = new THREEx.ArToolkitContext({
@@ -45,7 +42,7 @@ function init() {
         canvasHeight: 480
     });
 
-    arContext.init(function onCompleted() {
+    arContext.init(() => {
         camera.projectionMatrix.copy(arContext.getProjectionMatrix());
     });
 
@@ -53,22 +50,22 @@ function init() {
     // マーカー設定
     // ===============================
 
-    // 顕微鏡用マーカー
-    markerMicroscope = new THREE.Group();
-    scene.add(markerMicroscope);
+    // 顕微鏡（Zeiss）
+    markerZeiss = new THREE.Group();
+    scene.add(markerZeiss);
 
-    let markerControlsMicroscope = new THREEx.ArMarkerControls(arContext, markerMicroscope, {
+    new THREEx.ArMarkerControls(arContext, markerZeiss, {
         type: 'pattern',
-        patternUrl: 'markers/microscope.patt'
+        patternUrl: 'markers/pattern-zeiss-marker.patt'
     });
 
-    // 人工心肺用マーカー
+    // 人工心肺
     markerHeartLung = new THREE.Group();
     scene.add(markerHeartLung);
 
-    let markerControlsHeartLung = new THREEx.ArMarkerControls(arContext, markerHeartLung, {
+    new THREEx.ArMarkerControls(arContext, markerHeartLung, {
         type: 'pattern',
-        patternUrl: 'markers/heartlung.patt'
+        patternUrl: 'markers/pattern-heartlung-marker.patt'
     });
 
     // ===============================
@@ -77,29 +74,29 @@ function init() {
 
     const loader = new THREE.GLTFLoader();
 
-    // 顕微鏡モデル
+    // 顕微鏡モデル（zeiss.glb）
     loader.load(
-        'models/microscope.glb',
-        function (gltf) {
-            let model = gltf.scene;
-            model.scale.set(0.5, 0.5, 0.5);   // 適宜調整
+        'models/zeiss.glb',
+        gltf => {
+            const model = gltf.scene;
+            model.scale.set(0.5, 0.5, 0.5);
             model.position.set(0, 0, 0);
-            markerMicroscope.add(model);
+            markerZeiss.add(model);
         }
     );
 
-    // 人工心肺モデル
+    // 人工心肺モデル（heartlung.glb）
     loader.load(
         'models/heartlung.glb',
-        function (gltf) {
-            let model = gltf.scene;
-            model.scale.set(0.5, 0.5, 0.5);   // 適宜調整
+        gltf => {
+            const model = gltf.scene;
+            model.scale.set(0.5, 0.5, 0.5);
             model.position.set(0, 0, 0);
             markerHeartLung.add(model);
         }
     );
 
-    // 簡易ライト
+    // ライト
     const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1.0);
     scene.add(light);
 }
