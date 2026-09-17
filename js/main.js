@@ -35,7 +35,7 @@ function init() {
 
     // AR.js コンテキスト
     arContext = new THREEx.ArToolkitContext({
-        cameraParametersUrl: 'data/camera_para.dat',
+        cameraParametersUrl: 'https://k2catman.github.io/ar_copi/data/camera_para.dat',
         detectionMode: 'mono',
         maxDetectionRate: 30,
         canvasWidth: 640,
@@ -47,7 +47,7 @@ function init() {
     });
 
     // ===============================
-    // マーカー設定
+    // マーカー設定（絶対パスで安全に読み込む）
     // ===============================
 
     // 顕微鏡（Zeiss）
@@ -56,7 +56,7 @@ function init() {
 
     new THREEx.ArMarkerControls(arContext, markerZeiss, {
         type: 'pattern',
-        patternUrl: './markers/pattern-zeiss-marker.patt'
+        patternUrl: 'https://k2catman.github.io/ar_copi/markers/pattern-zeiss-marker.patt'
     });
 
     // 人工心肺
@@ -65,7 +65,7 @@ function init() {
 
     new THREEx.ArMarkerControls(arContext, markerHeartLung, {
         type: 'pattern',
-        patternUrl: './markers/pattern-heartlung-marker.patt'
+        patternUrl: 'https://k2catman.github.io/ar_copi/markers/pattern-heartlung-marker.patt'
     });
 
     // ===============================
@@ -76,7 +76,7 @@ function init() {
 
     // 顕微鏡モデル（zeiss.glb）
     loader.load(
-        'models/zeiss.glb',
+        'https://k2catman.github.io/ar_copi/models/zeiss.glb',
         gltf => {
             const model = gltf.scene;
             model.scale.set(0.5, 0.5, 0.5);
@@ -87,7 +87,7 @@ function init() {
 
     // 人工心肺モデル（heartlung.glb）
     loader.load(
-        'models/heartlung.glb',
+        'https://k2catman.github.io/ar_copi/models/heartlung.glb',
         gltf => {
             const model = gltf.scene;
             model.scale.set(0.5, 0.5, 0.5);
